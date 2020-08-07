@@ -132,4 +132,4 @@ dmypy.json
 .pyre/
 
 #Auth file
-auth.py
+authfile.py
