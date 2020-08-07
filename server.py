@@ -1,7 +1,7 @@
 import authfile
 import driver
 import json
-import jwt
+from jose import jwt
 from six.moves.urllib.request import urlopen
 from functools import wraps
 from flask import Flask, request, jsonify, _request_ctx_stack
@@ -14,12 +14,6 @@ app = Flask(__name__)
 
 # establish connection to database
 connection = driver.Database()
-
-
-@app.route('/test', methods=['GET'])
-def test_api():
-    return jsonify({'result': "hello it is me your friend"})
-
 
 # Format error response and append status code
 def get_token_auth_header():
@@ -82,33 +76,16 @@ def requires_auth(f):
 
             except jwt.ExpiredSignatureError:
                 raise AuthError({"code": "token_expired",
-                                 "description": "token is expired"}, 401)
+                                "description": "token is expired"}, 401)
 
-            except jwt.InvalidAudienceError:
-                raise AuthError({"code": "invalid audience",
-                                 "description": "audience is invalid"}, 401)
+            except jwt.JWTClaimsError:
+                raise AuthError({"code": "invalid_claims",
+                                "description": "incorrect claims please check the audience and issuer"}, 401)
 
-            except jwt.InvalidAlgorithmError:
-                raise AuthError({"code": "invalid algorithm",
-                                 "description": "algorithm is invalid"}, 401)
-
-            except jwt.InvalidSignatureError:
-                raise AuthError({"code": "invalid signature",
-                                 "description": "signature is invalid"}, 401)
-
-            except jwt.InvalidTokenError:
-                raise AuthError({"code": "invalid token",
-                                 "description": "token is invalid"}, 401)
-
-            except jwt.InvalidIssuerError:
-                raise AuthError({"code": "invalid issuer",
-                                 "description": "issuer is invalid"}, 401)
-            """
             except Exception:
                 raise AuthError({"code": "invalid_header",
-                                 "description": "Unable to parse authentication token."
-                                 "more:": Exception. }, 401)
- """
+                                 "description": "Unable to parse authentication token."}, 401)
+
             _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
