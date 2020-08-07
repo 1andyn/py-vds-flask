@@ -21,7 +21,6 @@ To ensure only authenticated users can access the database, this backend webserv
  
  An indepth guide on Auth0 can be found [here](https://auth0.com/docs/architecture-scenarios/spa-api).
 
-
 ######authfile sample (used to store sensitive info):
 ```
 c_pa = "connect_password_mongo"
@@ -29,4 +28,15 @@ c_sr = "connection_user_mongo"
 c_co = "mongo_endpoint"
 a_dm = "authorization_domain"
 a_ap = "api_end_here"
+```
+  
+###### Noteable things:
+In order to get the import to work: 
+```
+from jose import jwt
+```
+
+I had to manually use pip to install:
+```
+pip install python-jose[cryptography]
 ```
