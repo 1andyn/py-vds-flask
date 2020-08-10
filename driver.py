@@ -23,7 +23,16 @@ class Database:
                 "strEvent": event.getEvent(),
                 "dtmDate": event.getDate()}
 
-        return collection.insert_one(doc)
+        return collection.update_one({"strUsrId": user,
+                                      "strId": event.getId(),
+                                      "strEvent": event.getEvent(),
+                                      "dtmDate": event.getDate()},
+                                     {"$set":
+                                          {"strUsrId": user,
+                                           "strId": event.getId(),
+                                           "strEvent": event.getEvent(),
+                                           "dtmDate": event.getDate()
+                                           }}, upsert=True)
 
     # retrieves events for user
     def get_events(self, user):

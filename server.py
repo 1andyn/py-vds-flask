@@ -133,8 +133,8 @@ def retrieval():
 def put_event(self):
     if requires_scope("add:events"):
         usr = get_sub()
-        if usr != "":
-            data = request.get_json()
+        data = request.get_json()
+        if usr != "" or data.strId == "":
             e = event.Event(data.strId, data.strEvent, data.dtmDate)
             connection.insert_event(event, usr)
             response = "Successfully synced."
@@ -154,8 +154,8 @@ def put_event(self):
 def delete_sp_event():
     if requires_scope("delete:events"):
         usr = get_sub()
-        if usr != "":
-            data = request.get_json()
+        data = request.get_json()
+        if usr != "" or data.strId == "":
             connection.del_one_event(data.strId, usr)
             response = "Successfully deleted."
             return jsonify(message=response)
