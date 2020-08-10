@@ -1,6 +1,7 @@
 import authfile
 import driver
 import json
+import event
 from jose import jwt
 from six.moves.urllib.request import urlopen
 from functools import wraps
@@ -14,6 +15,7 @@ app = Flask(__name__)
 
 # establish connection to database
 connection = driver.Database()
+
 
 # Format error response and append status code
 def get_token_auth_header():
@@ -76,11 +78,11 @@ def requires_auth(f):
 
             except jwt.ExpiredSignatureError:
                 raise AuthError({"code": "token_expired",
-                                "description": "token is expired"}, 401)
+                                 "description": "token is expired"}, 401)
 
             except jwt.JWTClaimsError:
                 raise AuthError({"code": "invalid_claims",
-                                "description": "incorrect claims please check the audience and issuer"}, 401)
+                                 "description": "incorrect claims please check the audience and issuer"}, 401)
 
             except Exception:
                 raise AuthError({"code": "invalid_header",
@@ -108,12 +110,104 @@ def handle_auth_error(ex):
     return response
 
 
-# This needs authentication
+# This needs retrieve all events for user
 @app.route("/retrieve")
 @requires_auth
-def private():
-    response = "Hello from a private endpoint! You need to be authenticated to see this."
-    return jsonify(message=response)
+def retrieval():
+    if requires_scope("read:events"):
+        usr = get_sub()
+        if usr != "":
+            response = connection.get_events(usr)
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+    else:
+        response = "Error: Access Authorization failed."
+        return jsonify(message=response)
+
+
+# This needs authentication
+@app.route("/add", methods=["PUT"])
+@requires_auth
+def put_event(self):
+    if requires_scope("add:events"):
+        usr = get_sub()
+        if usr != "":
+            data = request.get_json()
+            e = event.Event(data.strId, data.strEvent, data.dtmDate)
+            connection.insert_event(event, usr)
+            response = "Successfully synced."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+
+    else:
+        response = "Error: Access Authorization failed."
+        return jsonify(message=response)
+
+
+# This needs authentication
+@app.route("/delete", methods=["DELETE"])
+@requires_auth
+def delete_sp_event():
+    if requires_scope("delete:events"):
+        usr = get_sub()
+        if usr != "":
+            data = request.get_json()
+            connection.del_one_event(data.strId, usr)
+            response = "Successfully deleted."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+
+    else:
+        response = "Error: Access Authorization failed."
+        return jsonify(message=response)
+
+
+@app.route("/delete/all", methods=["DELETE"])
+def delete_all_events():
+    if requires_scope("delete:events"):
+        usr = get_sub()
+        if usr != "":
+            data = request.get_json()
+            connection.del_events(usr)
+            response = "Successfully cleared."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+
+    else:
+        response = "Error: Access Authorization failed."
+        return jsonify(message=response)
+
+
+def requires_scope(required_scope):
+    # Determines if the required scope is present in the Access Token
+    # required_scope (str): The scope required to access the resource
+
+    token = get_token_auth_header()
+    unverified_claims = jwt.get_unverified_claims(token)
+    if unverified_claims.get("scope"):
+        token_scopes = unverified_claims["scope"].split()
+        for token_scope in token_scopes:
+            if token_scope == required_scope:
+                return True
+    return False
+
+
+def get_sub():
+    # Determines if the required scope is present in the Access Token
+    # required_scope (str): The scope required to access the resource
+
+    token = get_token_auth_header()
+    unverified_claims = jwt.get_unverified_claims(token)
+    if unverified_claims.get("sub"):
+        return unverified_claims["sub"]
 
 
 if __name__ == '__main__':

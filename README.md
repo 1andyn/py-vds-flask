@@ -8,6 +8,7 @@ To ensure only authenticated users can access the database, this backend webserv
 
 ###### Setup:
  * Setting up Single Page Web App on Auth0
+    * Modify SPA to use authentication token when making API requests
  * Setting up API on Auth0
     * Configuring permissions on API
  * Installing Auth0 Authorization extension
@@ -15,7 +16,8 @@ To ensure only authenticated users can access the database, this backend webserv
         * Adding Roles
         * Adding Permissions
         * Other misc. authorization config
- * Setting up rules
+ * Setting up rules (Auth0 Dashboard)
+    * Used for authentication pipeline (i.e what to put in the access token)
  * Host SPA (Single Page Application)
  * Host backend service (this)
  
@@ -40,3 +42,4 @@ I had to manually use pip to install:
 ```
 pip install python-jose[cryptography]
 ```
+Using other jwt imports resulted in inability to parse token
