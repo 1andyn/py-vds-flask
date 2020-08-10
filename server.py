@@ -6,15 +6,38 @@ from jose import jwt
 from six.moves.urllib.request import urlopen
 from functools import wraps
 from flask import Flask, request, jsonify, _request_ctx_stack
+from flask_cors import CORS, cross_origin
 
 AUTH0_DOMAIN = authfile.a_dm
 API_AUDIENCE = authfile.a_ap
 ALGORITHMS = ["RS256"]
 
+allowed_origin = ""
+if not authfile.dev:
+    allowed_origin = authfile.source
+else:
+    allowed_origin = "http://localhost:3000"
+
 app = Flask(__name__)
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, resources={r"*": {"origins": allowed_origin}}, supports_credentials=True)
 
 # establish connection to database
 connection = driver.Database()
+
+
+# Error handler
+class AuthError(Exception):
+    def __init__(self, error, status_code):
+        self.error = error
+        self.status_code = status_code
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
 
 
 # Format error response and append status code
@@ -32,11 +55,12 @@ def get_token_auth_header():
     if parts[0].lower() != "bearer":
         raise AuthError({"code": "invalid_header",
                          "description":
-                             "Authorization header must start with"
-                             " Bearer"}, 401)
+                             "Authorization header must start with Bearer"}, 401)
+
     elif len(parts) == 1:
         raise AuthError({"code": "invalid_header",
                          "description": "Token not found"}, 401)
+
     elif len(parts) > 2:
         raise AuthError({"code": "invalid_header",
                          "description":
@@ -90,24 +114,11 @@ def requires_auth(f):
 
             _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
+
         raise AuthError({"code": "invalid_header",
                          "description": "Unable to find appropriate key"}, 401)
 
     return decorated
-
-
-# Error handler
-class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
-        self.status_code = status_code
-
-
-@app.errorhandler(AuthError)
-def handle_auth_error(ex):
-    response = jsonify(ex.error)
-    response.status_code = ex.status_code
-    return response
 
 
 # This needs retrieve all events for user
@@ -130,13 +141,13 @@ def retrieval():
 # This needs authentication
 @app.route("/add", methods=["PUT"])
 @requires_auth
-def put_event(self):
+def put_event():
     if requires_scope("add:events"):
         usr = get_sub()
         data = request.get_json()
-        if usr != "" or data.strId == "":
-            e = event.Event(data.strId, data.strEvent, data.dtmDate)
-            connection.insert_event(event, usr)
+        if usr != "" and data['strId'] != "":
+            e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
+            connection.insert_event(e, usr)
             response = "Successfully synced."
             return jsonify(message=response)
         else:
@@ -149,14 +160,14 @@ def put_event(self):
 
 
 # This needs authentication
-@app.route("/delete", methods=["DELETE"])
+@app.route("/delsp", methods=["DELETE"])
 @requires_auth
 def delete_sp_event():
     if requires_scope("delete:events"):
         usr = get_sub()
         data = request.get_json()
-        if usr != "" or data.strId == "":
-            connection.del_one_event(data.strId, usr)
+        if usr != "" and data['strId'] != "":
+            connection.del_one_event(data['strId'], usr)
             response = "Successfully deleted."
             return jsonify(message=response)
         else:
@@ -169,6 +180,7 @@ def delete_sp_event():
 
 
 @app.route("/delete/all", methods=["DELETE"])
+@requires_auth
 def delete_all_events():
     if requires_scope("delete:events"):
         usr = get_sub()
@@ -201,8 +213,7 @@ def requires_scope(required_scope):
 
 
 def get_sub():
-    # Determines if the required scope is present in the Access Token
-    # required_scope (str): The scope required to access the resource
+    # Get sub of user
 
     token = get_token_auth_header()
     unverified_claims = jwt.get_unverified_claims(token)
@@ -211,4 +222,4 @@ def get_sub():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=authfile.dev)
