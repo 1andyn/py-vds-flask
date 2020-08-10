@@ -2,6 +2,7 @@ import pymongo
 import datetime
 import authfile
 import dns
+import event
 
 
 class Database:
@@ -19,32 +20,24 @@ class Database:
     def insert_event(self, event, user):
         collection = self.__db["vds_events"]
         doc = {"strUsrId": user,
-                "strId": event.getId(),
-                "strEvent": event.getEvent(),
-                "dtmDate": event.getDate()}
+               "strId": event.getId(),
+               "strEvent": event.getEvent(),
+               "dtmDate": event.getDate()}
 
         return collection.update_one({"strUsrId": user,
-                                      "strId": event.getId(),
-                                      "strEvent": event.getEvent(),
-                                      "dtmDate": event.getDate()},
-                                     {"$set":
-                                          {"strUsrId": user,
-                                           "strId": event.getId(),
-                                           "strEvent": event.getEvent(),
-                                           "dtmDate": event.getDate()
-                                           }}, upsert=True)
+                                      "strId": event.getId()},
+                                     {"$set": doc}, upsert=True)
 
     # retrieves events for user
     def get_events(self, user):
         collection = self.__db["vds_events"]
         events = []
-        for event in collection.find({"strUsrId": user},
-                                     {"_id": 0,
-                                      "strUsrId": 1,
-                                      "strId": 1,
-                                      "strEvent": 1,
-                                      "dtmDate": 1}):
-            events.append(event)
+        for e in collection.find({"strUsrId": user},
+                                 {"_id": 0,
+                                  "strId": 1,
+                                  "strEvent": 1,
+                                  "dtmDate": 1}):
+            events.append(e)
 
         return events
 
