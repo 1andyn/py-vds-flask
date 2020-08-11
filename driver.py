@@ -50,3 +50,4 @@ class Database:
     def del_one_event(self, user, eid):
         collection = self.__db["vds_events"]
         collection.delete_one({"strUsrId": user, "strId": eid})
+

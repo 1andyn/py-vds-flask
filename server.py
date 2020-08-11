@@ -125,76 +125,60 @@ def requires_auth(f):
 @app.route("/retrieve")
 @requires_auth
 def retrieval():
-    if requires_scope("read:events"):
-        usr = get_sub()
-        if usr != "":
-            response = connection.get_events(usr)
-            return jsonify(message=response)
-        else:
-            response = "Error: Couldn't identify user."
-            return jsonify(message=response)
-    else:
-        response = "Error: Access Authorization failed."
+    usr = get_sub()
+    if usr != "":
+        response = connection.get_events(usr)
         return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
+
 
 
 # This needs authentication
 @app.route("/add", methods=["PUT"])
 @requires_auth
 def put_event():
-    if requires_scope("add:events"):
-        usr = get_sub()
-        data = request.get_json()
-        if usr != "" and data['strId'] != "":
-            e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
-            connection.insert_event(e, usr)
-            response = "Successfully synced."
-            return jsonify(message=response)
-        else:
-            response = "Error: Couldn't identify user."
-            return jsonify(message=response)
-
-    else:
-        response = "Error: Access Authorization failed."
+    usr = get_sub()
+    data = request.get_json()
+    if usr != "" and data['strId'] != "":
+        e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
+        connection.insert_event(e, usr)
+        response = "Successfully synced."
         return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
+
 
 
 # This needs authentication
 @app.route("/delsp", methods=["DELETE"])
 @requires_auth
 def delete_sp_event():
-    if requires_scope("delete:events"):
-        usr = get_sub()
-        data = request.get_json()
-        if usr != "" and data['strId'] != "":
-            connection.del_one_event(data['strId'], usr)
-            response = "Successfully deleted."
-            return jsonify(message=response)
-        else:
-            response = "Error: Couldn't identify user."
-            return jsonify(message=response)
-
-    else:
-        response = "Error: Access Authorization failed."
+    usr = get_sub()
+    data = request.get_json()
+    if usr != "" and data['strId'] != "":
+        connection.del_one_event(usr, data['strId'])
+        response = "Successfully deleted."
         return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
+
 
 
 @app.route("/delete/all", methods=["DELETE"])
 @requires_auth
 def delete_all_events():
-    if requires_scope("delete:events"):
-        usr = get_sub()
-        if usr != "":
-            data = request.get_json()
-            connection.del_events(usr)
-            response = "Successfully cleared."
-            return jsonify(message=response)
-        else:
-            response = "Error: Couldn't identify user."
-            return jsonify(message=response)
-
+    usr = get_sub()
+    if usr != "":
+        data = request.get_json()
+        connection.del_events(usr)
+        response = "Successfully cleared."
+        return jsonify(message=response)
     else:
-        response = "Error: Access Authorization failed."
+        response = "Error: Couldn't identify user."
         return jsonify(message=response)
 
 
