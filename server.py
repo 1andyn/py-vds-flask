@@ -7,6 +7,7 @@ from six.moves.urllib.request import urlopen
 from functools import wraps
 from flask import Flask, request, jsonify, _request_ctx_stack
 from flask_cors import CORS, cross_origin
+import pyOpenSSL
 
 AUTH0_DOMAIN = authfile.a_dm
 API_AUDIENCE = authfile.a_ap
@@ -206,4 +207,4 @@ def get_sub():
 
 
 if __name__ == '__main__':
-    app.run(debug=authfile.dev)
+    app.run(debug=authfile.dev, ssl_context=('cert.pem', 'key.pem'))

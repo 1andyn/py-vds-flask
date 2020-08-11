@@ -41,6 +41,7 @@ flask-cors
 six
 pipmongo
 dnspython
+ssl
 ```
 
 I had to manually use pip to install in contrast to Auth0's doc:
