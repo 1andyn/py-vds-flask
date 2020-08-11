@@ -31,14 +31,19 @@ c_co = "mongo_endpoint"
 a_dm = "authorization_domain"
 a_ap = "api_end_here"
 ```
-  
-###### Noteable things:
-In order to get the import to work: 
+ 
+###### Requirements:
 ```
-from jose import jwt
+flask
+python-dotenv
+python-jose[cryptography]
+flask-cors
+six
+pipmongo
+dnspython
 ```
 
-I had to manually use pip to install:
+I had to manually use pip to install in contrast to Auth0's doc:
 ```
 pip install python-jose[cryptography]
 ```
