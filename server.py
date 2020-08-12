@@ -2,7 +2,6 @@ import authfile
 import driver
 import json
 import event
-import pymongo
 from jose import jwt
 from six.moves.urllib.request import urlopen
 from functools import wraps
@@ -17,7 +16,7 @@ allowed_origin = ""
 if not authfile.dev:
     allowed_origin = authfile.source
 else:
-    allowed_origin = "http://localhost:3000"
+    allowed_origin = "http://localhost"
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -207,4 +206,7 @@ def get_sub():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=443, debug=authfile.dev, ssl_context=('cert.pem', 'key.pem'))
+    if authfile.dev:
+        app.run(host='0.0.0.0', port=5000, debug=authfile.dev)
+    else:
+        app.run(host='0.0.0.0', port=443, debug=authfile.dev, ssl_context=('cert.pem', 'key.pem'))

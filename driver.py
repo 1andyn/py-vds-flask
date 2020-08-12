@@ -7,6 +7,12 @@ import event
 
 class Database:
     def __init__(self):
+
+        if authfile.dev:
+            db = "dev_vue_days_since"
+        else:
+            db = "vue_days_since"
+
         client = pymongo.MongoClient("mongodb+srv://" + authfile.c_sr + ":" + authfile.c_pa + "@" + authfile.c_co +
                                      "/vue_days_since?authSource=admin&retryWrites=true&w=majority")
         self.__mgdbClient = client
