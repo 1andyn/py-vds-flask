@@ -16,7 +16,7 @@ allowed_origin = ""
 if not authfile.dev:
     allowed_origin = authfile.source
 else:
-    allowed_origin = "http://localhost"
+    allowed_origin = "http://localhost:3000"
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -134,11 +134,23 @@ def retrieval():
         return jsonify(message=response)
 
 
+# This needs retrieve all events for user
+@app.route("/arch_retrieve")
+@requires_auth
+def arch_retrieval():
+    usr = get_sub()
+    if usr != "":
+        response = connection.get_archive(usr)
+        return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
+
 
 # This needs authentication
 @app.route("/add", methods=["PUT"])
 @requires_auth
-def put_event():
+def add_event():
     usr = get_sub()
     data = request.get_json()
     if usr != "" and data['strId'] != "":
@@ -150,6 +162,36 @@ def put_event():
         response = "Error: Couldn't identify user."
         return jsonify(message=response)
 
+
+# This needs authentication
+@app.route("/arch", methods=["PUT"])
+@requires_auth
+def arc_event():
+    usr = get_sub()
+    data = request.get_json()
+    if usr != "" and data['strId'] != "":
+        e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
+        connection.arch_event(e, usr)
+        response = "Successfully synced."
+        return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
+
+
+# This needs authentication
+@app.route("/arch_delsp", methods=["DELETE"])
+@requires_auth
+def delete_sp_arch():
+    usr = get_sub()
+    data = request.get_json()
+    if usr != "" and data['strId'] != "":
+        connection.del_one_arch(usr, data['strId'])
+        response = "Successfully deleted."
+        return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
 
 
 # This needs authentication
@@ -167,7 +209,22 @@ def delete_sp_event():
         return jsonify(message=response)
 
 
+# This needs authentication
+@app.route("/arch_delete/all", methods=["DELETE"])
+@requires_auth
+def delete_all_arch():
+    usr = get_sub()
+    if usr != "":
+        data = request.get_json()
+        connection.clr_archive(usr)
+        response = "Successfully cleared."
+        return jsonify(message=response)
+    else:
+        response = "Error: Couldn't identify user."
+        return jsonify(message=response)
 
+
+# This needs authentication
 @app.route("/delete/all", methods=["DELETE"])
 @requires_auth
 def delete_all_events():
