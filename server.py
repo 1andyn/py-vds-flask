@@ -122,120 +122,114 @@ def requires_auth(f):
 
 
 # This needs retrieve all events for user
-@app.route("/retrieve")
+# Deletes all events or Gets all events
+@app.route("/Api/Events/", methods=["GET", "DELETE"])
 @requires_auth
-def retrieval():
+def events_handler():
     usr = get_sub()
-    if usr != "":
-        response = connection.get_events(usr)
-        return jsonify(message=response)
+    if request.method == 'GET':
+        if usr != "":
+            response = connection.get_events(usr)
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+    elif request.method == 'DELETE':
+        if usr != "":
+            data = request.get_json()
+            connection.del_events(usr)
+            response = "Successfully cleared."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
     else:
-        response = "Error: Couldn't identify user."
+        response = "Invalid Method"
         return jsonify(message=response)
 
 
 # This needs retrieve all events for user
-@app.route("/arch_retrieve")
+# Deletes all Events from Archive or Gets All Events
+@app.route("/Api/Archive/Events", methods=["GET", "DELETE"])
 @requires_auth
-def arch_retrieval():
+def arch_events_handler():
     usr = get_sub()
-    if usr != "":
-        response = connection.get_archive(usr)
-        return jsonify(message=response)
+    if request.method == 'GET':
+        if usr != "":
+            response = connection.get_archive(usr)
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+    elif request.method == 'DELETE':
+        if usr != "":
+            data = request.get_json()
+            connection.clr_archive(usr)
+            response = "Successfully cleared."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
     else:
-        response = "Error: Couldn't identify user."
+        response = "Invalid Method"
         return jsonify(message=response)
 
 
 # This needs authentication
-@app.route("/add", methods=["PUT"])
+# Adds an Event
+@app.route("/Api/Event", methods=["PUT", "DELETE"])
 @requires_auth
-def add_event():
+def event_handler():
     usr = get_sub()
     data = request.get_json()
-    if usr != "" and data['strId'] != "":
-        e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
-        connection.insert_event(e, usr)
-        response = "Successfully synced."
-        return jsonify(message=response)
+    if request.method == 'PUT':
+        if usr != "" and data['strId'] != "":
+            e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
+            connection.insert_event(e, usr)
+            response = "Successfully synced."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+    elif request.method == 'DELETE':
+        if usr != "" and data['strId'] != "":
+            connection.del_one_event(usr, data['strId'])
+            response = "Successfully deleted."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
     else:
-        response = "Error: Couldn't identify user."
+        response = "Invalid Method"
         return jsonify(message=response)
 
 
 # This needs authentication
-@app.route("/arch", methods=["PUT"])
+# Adds an Event to archive or Deletes specific event from Archive
+@app.route("/Api/Archive", methods=["PUT", "DELETE"])
 @requires_auth
-def arc_event():
+def arch_event_handler():
     usr = get_sub()
     data = request.get_json()
-    if usr != "" and data['strId'] != "":
-        e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
-        connection.arch_event(e, usr)
-        response = "Successfully synced."
-        return jsonify(message=response)
+    if request.method == 'PUT':
+        if usr != "" and data['strId'] != "":
+            e = event.Event(data['strId'], data['strEvent'], data['dtmDate'])
+            connection.arch_event(e, usr)
+            response = "Successfully synced."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
+    elif request.method == 'DELETE':
+        if usr != "" and data['strId'] != "":
+            connection.del_one_arch(usr, data['strId'])
+            response = "Successfully deleted."
+            return jsonify(message=response)
+        else:
+            response = "Error: Couldn't identify user."
+            return jsonify(message=response)
     else:
-        response = "Error: Couldn't identify user."
-        return jsonify(message=response)
-
-
-# This needs authentication
-@app.route("/arch_delsp", methods=["DELETE"])
-@requires_auth
-def delete_sp_arch():
-    usr = get_sub()
-    data = request.get_json()
-    if usr != "" and data['strId'] != "":
-        connection.del_one_arch(usr, data['strId'])
-        response = "Successfully deleted."
-        return jsonify(message=response)
-    else:
-        response = "Error: Couldn't identify user."
-        return jsonify(message=response)
-
-
-# This needs authentication
-@app.route("/delsp", methods=["DELETE"])
-@requires_auth
-def delete_sp_event():
-    usr = get_sub()
-    data = request.get_json()
-    if usr != "" and data['strId'] != "":
-        connection.del_one_event(usr, data['strId'])
-        response = "Successfully deleted."
-        return jsonify(message=response)
-    else:
-        response = "Error: Couldn't identify user."
-        return jsonify(message=response)
-
-
-# This needs authentication
-@app.route("/arch_delete/all", methods=["DELETE"])
-@requires_auth
-def delete_all_arch():
-    usr = get_sub()
-    if usr != "":
-        data = request.get_json()
-        connection.clr_archive(usr)
-        response = "Successfully cleared."
-        return jsonify(message=response)
-    else:
-        response = "Error: Couldn't identify user."
-        return jsonify(message=response)
-
-
-# This needs authentication
-@app.route("/delete/all", methods=["DELETE"])
-@requires_auth
-def delete_all_events():
-    usr = get_sub()
-    if usr != "":
-        data = request.get_json()
-        connection.del_events(usr)
-        response = "Successfully cleared."
-        return jsonify(message=response)
-    else:
-        response = "Error: Couldn't identify user."
+        response = "Invalid Method"
         return jsonify(message=response)
 
 
