@@ -123,7 +123,7 @@ def requires_auth(f):
 
 # This needs retrieve all events for user
 # Deletes all events or Gets all events
-@app.route("/Api/Events/", methods=["GET", "DELETE"])
+@app.route("/Api/Events", methods=["GET", "DELETE"])
 @requires_auth
 def events_handler():
     usr = get_sub()
@@ -206,7 +206,7 @@ def event_handler():
 
 # This needs authentication
 # Adds an Event to archive or Deletes specific event from Archive
-@app.route("/Api/Archive", methods=["PUT", "DELETE"])
+@app.route("/Api/Archive/Event", methods=["PUT", "DELETE"])
 @requires_auth
 def arch_event_handler():
     usr = get_sub()
